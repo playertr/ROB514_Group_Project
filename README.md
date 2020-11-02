@@ -3,7 +3,7 @@
 ## Usage
 1. Get HSV limits using `range_detector.py`:
     ```
-    python range-detector.py --webcam --filter HSV
+    python range_detector.py --webcam --filter HSV
     ```
     Make sure the object you want to track is white i.e. unmasked. The background should be black i.e. masked.
 

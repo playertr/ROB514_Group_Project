@@ -1,2 +1,5 @@
 *.csv
 *.mov
+*.MOV
+*.avi
+.idea/

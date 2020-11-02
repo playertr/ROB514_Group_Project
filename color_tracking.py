@@ -60,6 +60,13 @@ hsv_upper = tuple(map(int, hsv_upper.split(',')))
 
 tracked_pts = deque(maxlen=buffer)  # double-ended queue for storing tracked points
 
+# Start video stream
+stream = cv2.VideoCapture(vid_source)
+width = int(stream.get(3))  # get width of the video stream
+height = int(stream.get(4))  # get height of the video stream
+fps = int(stream.get(5))  # get fps of the video stream
+time.sleep(2)  # allow some time to grab the video stream
+
 # Load file write options if '--save' option is specified
 if args.save:
     if args.output and os.path.isdir(os.path.dirname(args.output)):
@@ -69,9 +76,9 @@ if args.save:
         output_file = 'autosave'
         print(f'[INFO] Filename not given or wrong filepath. Video will be saved to {output_file}.avi')
 
-    fps = config.getint('video', 'fps')
-    width = config.getint('video', 'width')
-    height = config.getint('video', 'height')
+    # fps = config.getint('video', 'fps')
+    # width = config.getint('video', 'width')
+    # height = config.getint('video', 'height')
     codec = config.get('video', 'codec')  # codec to use for writing the video
     ext = config.get('video', 'extension')  # file extension
 
@@ -79,60 +86,64 @@ if args.save:
     fourcc = cv2.VideoWriter_fourcc(*f'{codec}')
     writer = cv2.VideoWriter(vid_out, fourcc, fps, (width, height))  # intialize video writer
 
-# Start video stream
-stream = cv2.VideoCapture(vid_source)
-time.sleep(2)  # allow some time to grab the video stream
-
 # keep looping while the stream is on
 while stream.isOpened():
     grabbed, frame = stream.read()  # read the video stream and grab the current frame
-    blurred = cv2.GaussianBlur(frame, blur_kernel, 0)  # apply blur
-    hsv_frame = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)  # convert from RGB to HSV colorspace
 
-    mask = cv2.inRange(hsv_frame, hsv_lower, hsv_upper)  # create a mask over the object to track
-    mask = cv2.erode(mask, None, iterations=erode_iter)  # erode to remove small blobs and edges
-    mask = cv2.dilate(mask, None, iterations=dilate_iter)  # dilate to get smooth edges
+    if grabbed:
+        blurred = cv2.GaussianBlur(frame, blur_kernel, 0)  # apply blur
+        hsv_frame = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)  # convert from RGB to HSV colorspace
 
-    # Find contours in the mask.
-    contours, hierarchy = cv2.findContours(mask.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        mask = cv2.inRange(hsv_frame, hsv_lower, hsv_upper)  # create a mask over the object to track
+        mask = cv2.erode(mask, None, iterations=erode_iter)  # erode to remove small blobs and edges
+        mask = cv2.dilate(mask, None, iterations=dilate_iter)  # dilate to get smooth edges
 
-    center = None  # center of detected object
-    # Draw bounding box
-    if len(contours) > 0:  # make sure at least 1 contour is obtained
-        largest_contour = max(contours, key=cv2.contourArea)  # get the largest contour
-        bbox = cv2.minAreaRect(largest_contour)  # create a rectangle using the largest found contour
-        bbox = cv2.boxPoints(bbox)
-        bbox = np.int0(bbox)
-        center = tuple(bbox.mean(axis=0).astype('int'))  # get the center of the rectangle
+        # Find contours in the mask
+        contours, hierarchy = cv2.findContours(mask.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-        # draw the bounding box around the detected object
-        frame = cv2.drawContours(frame, [bbox], 0, (0, 255, 0), 3)
+        center = None  # center of detected object
+        # Draw bounding box
+        if len(contours) > 0:  # make sure at least 1 contour is obtained
+            largest_contour = max(contours, key=cv2.contourArea)  # get the largest contour
+            bbox = cv2.minAreaRect(largest_contour)  # create a rectangle using the largest found contour
+            bbox = cv2.boxPoints(bbox)
+            bbox = np.int0(bbox)
+            center = tuple(bbox.mean(axis=0).astype('int'))  # get the center of the rectangle
 
-    # Update tracked points using center of rectangle
-    tracked_pts.appendleft(center)
+            # draw the bounding box around the detected object
+            frame = cv2.drawContours(frame, [bbox], 0, (0, 255, 0), 3)
 
-    # Draw tracker
-    # loop over the tracked points
-    for i in range(1, len(tracked_pts)):
-        # ignore if either of the tracked points are None
-        if tracked_pts[i - 1] is None or tracked_pts[i] is None:
-            continue
+        # Update tracked points using center of rectangle
+        tracked_pts.appendleft(center)
 
-        thickness = int(np.sqrt(buffer / float(i + 1)) * 2.5)  # thickness of tracking line
+        # Draw tracker
+        # loop over the tracked points
+        for i in range(1, len(tracked_pts)):
+            # ignore if either of the tracked points are None
+            if tracked_pts[i - 1] is None or tracked_pts[i] is None:
+                continue
 
-        # Draw the tracked line
-        cv2.line(frame, tracked_pts[i - 1], tracked_pts[i], (0, 0, 255), thickness)
+            thickness = int(np.sqrt(buffer / float(i + 1)) * 2.5)  # thickness of tracking line
 
-    # Write frame to video file if '--save' option is specified
-    if args.save:
-        writer.write(frame)
+            # Draw the tracked line
+            cv2.line(frame, tracked_pts[i - 1], tracked_pts[i], (0, 0, 255), thickness)
 
-    # Show the current frame
-    cv2.imshow('frame', frame)
+        # Write frame to video file if '--save' option is specified
+        if args.save:
+            writer.write(frame)
 
-    # Stop streaming the video if 'q' is pressed
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+        # Show the current frame
+        cv2.imshow('frame', frame)
+
+        # Stop streaming the video if 'q' is pressed
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    else:
         break
 
 stream.release()  # release the video stream
 cv2.destroyAllWindows()  # close all open windows
+
+if args.save:
+    writer.release()
