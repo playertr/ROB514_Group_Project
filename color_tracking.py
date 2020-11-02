@@ -93,7 +93,7 @@ while stream.isOpened():
     mask = cv2.erode(mask, None, iterations=erode_iter)  # erode to remove small blobs and edges
     mask = cv2.dilate(mask, None, iterations=dilate_iter)  # dilate to get smooth edges
 
-    # Find contours in the mask
+    # Find contours in the mask.
     contours, hierarchy = cv2.findContours(mask.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     center = None  # center of detected object
