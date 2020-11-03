@@ -25,5 +25,5 @@
 
 4. Stream live video using 'live_video.py':
     ```
-    python3 live_video.py
+    python3 live_video.py 
     ```
