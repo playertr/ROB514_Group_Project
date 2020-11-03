@@ -9,16 +9,21 @@
 
 2. Update the HSV limits and set your camera device or video file as the source in `config.ini`.
 
-2. Track object using `color_tracking.py`:
+3. Track object using `color_tracking.py`:
     ```
     python color_tracking.py -c config.ini
     ```
    Default config file is config.ini
-   
+
    If you want to save the video stream to a file:
    ```
    python color_tracking.py --save -o filename
    ```
     Specify filename without the extension.
-    
+
     Default save location is autosave.avi
+
+4. Stream live video using 'live_video.py':
+    ```
+    python3 live_video.py
+    ```
