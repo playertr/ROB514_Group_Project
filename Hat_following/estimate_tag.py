@@ -18,6 +18,7 @@ import cv2
 import cv2.aruco as aruco
 import glob
 import queue
+from image_grab import Record
 
 USE_WEBCAM = True # use webcam instead of drone stream (for debugging)
 MAX_TIMES_WITHOUT_READING = 20
@@ -151,6 +152,33 @@ class PoseEst:
         # display the resulting frame
         cv2.imshow('frame',frame)
 
+    def get_arc_angle(self):
+        """ Return the angle that the z-axis of the object casts along the x-axis of the camera.
+        Such that when the object's z-axis has a zero-length projection along the camera's x-axis,
+        the arc-angle is zero.
+
+        Returns:
+            (floats): tuple of floats, one for each identified target
+        """
+        rvecs, tvecs = self.get_target_state()
+        if rvecs is None:
+            return None
+        angles = []
+        for i in range(rvecs.shape[1]):
+            rmat, _ = cv2.Rodrigues(rvecs[i])
+            angle = np.arcsin(rmat[0,2])
+            angles.append(angle)
+        return tuple(angles)
+
+    def get_distance(self):
+        rvecs, tvecs = self.get_target_state()
+        if rvecs is None:
+            return None
+        distances = []
+        for i in range(tvecs.shape[1]):
+            distances.append(np.linalg.norm(tvecs[i]))
+        return tuple(distances)
+
     def get_calibration(self):
         # termination criteria for the iterative algorithm
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -206,7 +234,9 @@ if __name__ == "__main__":
     pe = PoseEst()
 
     while(True):
-        pe.update()
-        pe.draw_estimate()
+        pe.update() # grabs an image and updates the filter
+        pe.draw_estimate() # uses the same image from earlier 
+        print(f"pe.get_arc_angle: {pe.get_arc_angle()}")
+        print(f"pe.get_distance: {pe.get_distance()}")
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
