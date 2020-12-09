@@ -19,6 +19,7 @@ import numpy as np
 
 def init_PID(self):
         def proportional():
+        	zoff_thresh = 1			#currently set as 1 m distance from the target
             Vx = 0
             Vy = 0
             Vz = 0 
@@ -32,6 +33,7 @@ def init_PID(self):
             while True:
                 #yield an x, y and z velocity from xoff, yoff, zoff
                 xoff, yoff, zoff = yield Vx, Vy, Vz
+                zoff = zoff - zoff_thresh   #distance to maintain from the target
 
                 #PID Calculations
                 current_time = time.time()
@@ -75,25 +77,25 @@ def init_PID(self):
 	        speed = 0
 
 	        if self.tracking:
-	            if abs(Vx) > abs(Vy):
-	                if Vx > 0:
+	            if abs(Vx) > abs(Vy) or abs(Vz):
+	                if Vx < 0:
 	                    cmd = "right"
 	                    speed = abs(Vx)
-	                elif Vx < 0:
+	                elif Vx > 0:
 	                    cmd = "left"
 	                    speed = abs(Vx)
-	            else:
-	                if Vy > 0:
+	            elif abs(Vy) > abs(Vx) or abs(Vz):
+	                if Vy < 0:
 	                    cmd = "up"
 	                    speed = abs(Vy)
-	                elif Vy < 0:
+	                elif Vy > 0:
 	                    cmd = "down"
 	                    speed = abs(Vy)
 
 	            else:
-	                if Vz > 0:
+	                if Vz < 0:
 	                    cmd = "forward"
 	                    speed = abs(Vz)
-	                elif Vy < 0:
+	                elif Vz > 0:
 	                    cmd = "backward"
 	                    speed = abs(Vz)
