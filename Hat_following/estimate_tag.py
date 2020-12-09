@@ -25,7 +25,11 @@ MAX_TIMES_WITHOUT_READING = 20
 class SimpleFilter:
     """ Filter which simply returns the last known value.
     In the future, this could be changed to a legit Kalman filter
-    or an ill-legit exponential weighted moving average filter. """
+    or an ill-legit exponential weighted moving average filter. 
+    
+    If no value is given for more than MAX_TIMES_WITHOUT_READING, 
+    the filter resets.
+    """
 
     def __init__(self):
         self.reset()
