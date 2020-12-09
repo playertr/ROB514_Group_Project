@@ -8,7 +8,7 @@
 #
 # This script controls the linear motion of the drone and makes sure that the robot stays in the center of the frame.
 
-from Estimate_tag import PoseEst
+from estimate_tag import PoseEst, SimpleFilter
 import time
 import cv2
 from imutils.video import VideoStream
@@ -16,13 +16,32 @@ import datetime
 import numpy as np
  #Python library that allows you to create multiple threads to run multiple functions at the same time. 
 
+def main():
+    """ Create a tello controller and show the video feed."""
+    tellotrack = TelloControl()
+    while True:
+        tellotrack.tello_track()
 
-def init_PID(self):
+
+
+class TelloControl:
+    """
+    This class has a script to control the linear movements of the drone to make sure it
+    is in the center of the frame
+    """
+    def __init__(self):
+        self.track_cmd = ""
+        self.track_speed = 0
+        self.pose = PoseEst()
+        self.filt = SimpleFilter()
+        self.init_PID()
+
+    def init_PID(self):
         def proportional():
-        	zoff_thresh = 1			#currently set as 1 m distance from the target
+            zoff_thresh = 1			#currently set as 1 m distance from the target
             Vx = 0
             Vy = 0
-            Vz = 0 
+            Vz = 0
             prev_time = time.time()
             Ix = 0
             Iy = 0
@@ -38,7 +57,7 @@ def init_PID(self):
                 #PID Calculations
                 current_time = time.time()
                 delta_t = current_time - prev_time
-                
+
                 #Control Equations, constants are adjusted as needed
                 Px = 0.1*xoff
                 Py = 0.1*yoff
@@ -63,39 +82,47 @@ def init_PID(self):
 
                 prev_time = current_time
         self.PID = proportional()
-        self.PID.send(None)    
+        self.PID.send(None)
 
-	def vel_control(self):
-	        """convert frame to cv2 image and show"""
-	        _, tvec = PoseEst.Get_target_state()		#input translational vector here
-	        xoff, yoff, zoff = [elem for elem in tvec]
+    def tello_track(self):
+        """convert frame to cv2 image and show"""
+        tvec = None
+        while tvec == None:
+            _, tvec = self.pose.read_image_pose()		#input translational vector here
+        xoff, yoff, zoff = [elem for elem in tvec]
 
-	        Vx,Vy, Vz = self.PID.send([xoff, yoff, zoff])   
-	                
-	        # Create a loop to implement the Vx, Vy and Vz as a command to move the drone accordingly
-	        cmd = "" 
-	        speed = 0
+        Vx,Vy, Vz = self.PID.send([xoff, yoff, zoff])
 
-	        if self.tracking:
-	            if abs(Vx) > abs(Vy) or abs(Vz):
-	                if Vx < 0:
-	                    cmd = "right"
-	                    speed = abs(Vx)
-	                elif Vx > 0:
-	                    cmd = "left"
-	                    speed = abs(Vx)
-	            elif abs(Vy) > abs(Vx) or abs(Vz):
-	                if Vy < 0:
-	                    cmd = "up"
-	                    speed = abs(Vy)
-	                elif Vy > 0:
-	                    cmd = "down"
-	                    speed = abs(Vy)
+        # Create a loop to implement the Vx, Vy and Vz as a command to move the drone accordingly
+        cmd = ""
+        speed = 0
 
-	            else:
-	                if Vz < 0:
-	                    cmd = "forward"
-	                    speed = abs(Vz)
-	                elif Vz > 0:
-	                    cmd = "backward"
-	                    speed = abs(Vz)
+       # if self.tracking:
+        if abs(Vx) > abs(Vy) or abs(Vz):
+            if Vx < 0:
+                cmd = "right"
+                speed = abs(Vx)
+            elif Vx > 0:
+                cmd = "left"
+                speed = abs(Vx)
+        elif abs(Vy) > abs(Vx) or abs(Vz):
+            if Vy < 0:
+                cmd = "up"
+                speed = abs(Vy)
+            elif Vy > 0:
+                cmd = "down"
+                speed = abs(Vy)
+
+        else:
+            if Vz < 0:
+                cmd = "forward"
+                speed = abs(Vz)
+            elif Vz > 0:
+                cmd = "backward"
+                speed = abs(Vz)
+        print(cmd)
+        print(speed)
+        return cmd, speed
+
+if __name__ == '__main__':
+    main()
