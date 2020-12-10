@@ -11,9 +11,9 @@
 from estimate_tag import PoseEst, SimpleFilter
 import time
 import cv2
-from imutils.video import VideoStream
 import datetime
 import numpy as np
+
  #Python library that allows you to create multiple threads to run multiple functions at the same time. 
 
 def main():
@@ -23,17 +23,13 @@ def main():
         tellotrack.tello_track()
 
 
-
 class TelloControl:
     """
     This class has a script to control the linear movements of the drone to make sure it
     is in the center of the frame
     """
     def __init__(self):
-        self.track_cmd = ""
-        self.track_speed = 0
         self.pose = PoseEst()
-        self.filt = SimpleFilter()
         self.init_PID()
 
     def init_PID(self):
@@ -86,17 +82,20 @@ class TelloControl:
 
     def tello_track(self):
         """convert frame to cv2 image and show"""
-        tvec = None
-        while tvec == None:
-            _, tvec = self.pose.read_image_pose()		#input translational vector here
-        xoff, yoff, zoff = [elem for elem in tvec]
+        self.pose.update()
+        self.pose.draw_estimate()
+        _, tvec = self.pose.read_image_pose()  # input translational vector here
+        if tvec != None:
+            xoff, yoff, zoff = [0.001, 0.001, 0.001]
+        else:
+            xoff, yoff, zoff = [elem for elem in tvec]
 
         Vx,Vy, Vz = self.PID.send([xoff, yoff, zoff])
+
 
         # Create a loop to implement the Vx, Vy and Vz as a command to move the drone accordingly
         cmd = ""
         speed = 0
-
        # if self.tracking:
         if abs(Vx) > abs(Vy) or abs(Vz):
             if Vx < 0:
