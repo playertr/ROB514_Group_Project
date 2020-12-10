@@ -180,7 +180,6 @@ class PoseEst:
             # code to show 'No Ids' when no markers are found
             cv2.putText(frame, "No Ids", (0,64), font, FONTSCALE, (0,255,0),2,cv2.LINE_AA)
 
-        import pdb; pdb.set_trace()
         # display the resulting frame
         cv2.imshow('frame',frame)
         cv2.waitKey(1)
