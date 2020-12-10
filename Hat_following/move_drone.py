@@ -12,10 +12,8 @@ from math import pi,sin,cos
 import time
 
 class MoveDrone:
-    def __init__(self):
-        self.tello = Tello()
-        # Attempt to establish the connection betweeen the Tello and computer
-        self.tello.connect()
+    def __init__(self,tello):
+        self.tello = tello
 
     #The first few commands below are fairly straightforward, doesn't need much
     #explanation
