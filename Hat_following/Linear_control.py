@@ -114,6 +114,7 @@ class TelloControl:
             xoff, yoff, zoff = [elem for elem in tvec.flatten()]
 
         Vx,Vy, Vz = self.PID.send([xoff, yoff, zoff])
+        print("Vx: {}, Vy: {}, Vz: {}".format(Vx, Vy, Vz))
 
 
         # Create a loop to implement the Vx, Vy and Vz as a command to move the drone accordingly
