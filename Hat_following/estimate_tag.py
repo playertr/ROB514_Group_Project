@@ -32,8 +32,13 @@ CALIB_SQUARE_SIZE = 0.025 # meters
 X_OFFSET = 0
 Y_OFFSET = 0
 
-OPTICAL_CENTER_X = 640/2 # DEBUG
-OPTICAL_CENTER_Y = 480/2
+# Tello is 720 by 960
+if USE_WEBCAM:
+    OPTICAL_CENTER_X = 640/2 # DEBUG
+    OPTICAL_CENTER_Y = 480/2
+else:
+    OPTICAL_CENTER_X = 960/2 # DEBUG
+    OPTICAL_CENTER_Y = 720/2
 
 class SimpleFilter:
     """ Filter which simply returns the last known value.
