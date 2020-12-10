@@ -22,6 +22,7 @@ from image_grab import Record
 
 USE_WEBCAM = True # use webcam instead of drone stream (for debugging)
 MAX_TIMES_WITHOUT_READING = 20
+FONTSCALE=0.5
 
 class SimpleFilter:
     """ Filter which simply returns the last known value.
@@ -59,6 +60,7 @@ class PoseEst:
     def __init__(self):
         """ Create queue of last-known positions and start the camera. """
 
+        print("Instantiating PoseEst.")
         # Calibrate camera (always necessary because it gives mtx and dist)
         ret, mtx, dist, rvecs, tvecs = self.get_calibration()
         self.mtx  = mtx
@@ -69,6 +71,7 @@ class PoseEst:
             self.drone = Record()
             # TODO: import Record
         else:
+            print("Making a VideoCapture object.")
             self.cap = cv2.VideoCapture(0)
 
         self.draw_est_info = (None, None, None) # Tuple containing objects necessary to draw the estimate
@@ -143,11 +146,11 @@ class PoseEst:
                 aruco.drawDetectedMarkers(frame, corners)
 
                 # cv2.putText(frame, "Id: " + strg, (0,64), font, 1, (0,255,0),2,cv2.LINE_AA)
-                cv2.putText(frame, f"Translation:{tvecs}", (0,64), font, 1, (0,255,0),2,cv2.LINE_AA)
+                cv2.putText(frame, f"Translation:{tvecs}", (0,64), font, FONTSCALE, (0,255,0),2,cv2.LINE_AA)
 
         else:
             # code to show 'No Ids' when no markers are found
-            cv2.putText(frame, "No Ids", (0,64), font, 1, (0,255,0),2,cv2.LINE_AA)
+            cv2.putText(frame, "No Ids", (0,64), font, FONTSCALE, (0,255,0),2,cv2.LINE_AA)
 
         # display the resulting frame
         cv2.imshow('frame',frame)
@@ -171,6 +174,7 @@ class PoseEst:
         return tuple(angles)
 
     def get_distance(self):
+        # TODO: calibrate to ensure distance is in meters
         rvecs, tvecs = self.get_target_state()
         if rvecs is None:
             return None

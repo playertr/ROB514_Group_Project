@@ -1,6 +1,6 @@
 import argparse
 import errno
-import numpy as np
+import numpy as npgit
 import os
 import time
 import yaml
@@ -56,9 +56,12 @@ while True:
         if offsets_min < offsets < offsets_max:
             move_drone.linear_control(0, 0, 0)
         else:
+            cmd, speed = linear_controller.tello_track(rvec, tvec)
+
             pass
             # vx, vy, vz = calculate_xyz_error()
             # go x y z speed
+
     else:
         pass
         # a, b, c, d = calculate_arc()
