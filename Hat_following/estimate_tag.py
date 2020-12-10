@@ -22,7 +22,15 @@ from image_grab import Record
 
 USE_WEBCAM = True # use webcam instead of drone stream (for debugging)
 MAX_TIMES_WITHOUT_READING = 20
-FONTSCALE=0.5
+FONTSCALE = 0.5
+MARKER_LENGTH = 0.203
+CALIB_SQUARE_SIZE = 0.025 # meters
+
+# Calibration offsets.
+# To set these, first make them zero. Then align the marker in the middle of the frame.
+# Then read off X and Y and set them accordingly.
+X_OFFSET = 0
+Y_OFFSET = 0
 
 class SimpleFilter:
     """ Filter which simply returns the last known value.
@@ -90,6 +98,10 @@ class PoseEst:
 
         rvecs = self.rvecs_filter.get_current_val()
         tvecs = self.tvecs_filter.get_current_val()
+        
+        if tvecs is not None:
+            tvecs[0][0][0] = tvecs[0][0][0] + X_OFFSET
+            tvecs[0][0][1] = tvecs[0][0][1] + Y_OFFSET
 
         return rvecs, tvecs
 
@@ -122,7 +134,7 @@ class PoseEst:
 
             # estimate pose of each marker and return the values
             # rvet and tvecs-different from camera coefficients
-            rvecs, tvecs ,_ = aruco.estimatePoseSingleMarkers(corners, 0.05, self.mtx, self.dist)
+            rvecs, tvecs ,_ = aruco.estimatePoseSingleMarkers(corners, MARKER_LENGTH, self.mtx, self.dist)
 
         self.draw_est_info = (ids, corners, frame)
 
@@ -154,6 +166,7 @@ class PoseEst:
 
         # display the resulting frame
         cv2.imshow('frame',frame)
+        cv2.waitKey(1)
 
     def get_arc_angle(self):
         """ Return the angle that the z-axis of the object casts along the x-axis of the camera.
@@ -193,10 +206,13 @@ class PoseEst:
         # objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
 
         # Checkerboard size
-        rows=7
-        cols=10
+        # rows=7
+        # cols=10
+        rows=6
+        cols=9
         objp = np.zeros((cols*rows,3), np.float32)
         objp[:,:2] = np.mgrid[0:rows,0:cols].T.reshape(-1,2)
+        objp = objp * CALIB_SQUARE_SIZE
 
         # arrays to store object points and image points from all the images.
         objpoints = [] # 3d point in real world space
@@ -204,7 +220,11 @@ class PoseEst:
 
         # iterating through all calibration images
         # in the folder
-        images = glob.glob('calib_images/checkerboard2/*.JPG')
+        if USE_WEBCAM:
+            images = glob.glob('calib_images/checkerboard3/*.jpg')  # calibration images for webcam
+        else:
+            images = glob.glob('calib_images/checkerboard2/*.JPG')
+        
         count = 0
         for fname in images:
             img = cv2.imread(fname)
@@ -242,5 +262,3 @@ if __name__ == "__main__":
         pe.draw_estimate() # uses the same image from earlier 
         print(f"pe.get_arc_angle: {pe.get_arc_angle()}")
         print(f"pe.get_distance: {pe.get_distance()}")
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
