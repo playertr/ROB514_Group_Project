@@ -4,6 +4,7 @@ import numpy as np
 import os
 import time
 import yaml
+import keyboard
 
 from djitellopy import Tello
 
@@ -63,6 +64,17 @@ with open("log%s.csv" % i, "w") as csvfile:
     old_time = time.time()
 
     while True:
+        pose_estimator.update(tello)  # Reads a single frame from the Tello and then updates the state estimation filter.
+        _, offsets = pose_estimator.get_target_state()
+
+        if keyboard.is_pressed('ctrl+q'):
+            move_drone.land()
+            break
+
+        if keyboard.is_pressed('ctrl+e'):
+            move_drone.emergency()
+            break
+
         pose_estimator.update(tello)  # Reads a single frame from the Tello and then updates the state estimation filter.
         _, offsets = pose_estimator.get_target_state()
 
