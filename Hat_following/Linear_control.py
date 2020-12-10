@@ -36,10 +36,6 @@ def main():
         pe.draw_estimate()                  # draw stuff
         tellotrack.tello_track(rvec, tvec)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-
 class TelloControl:
     """
     This class has a script to control the linear movements of the drone to make sure it
