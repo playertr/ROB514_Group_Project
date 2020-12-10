@@ -20,7 +20,7 @@ import glob
 import queue
 from image_grab import Record
 
-USE_WEBCAM = True # use webcam instead of drone stream (for debugging)
+USE_WEBCAM = False # use webcam instead of drone stream (for debugging)
 MAX_TIMES_WITHOUT_READING = 20
 FONTSCALE = 0.5
 MARKER_LENGTH = 0.203
@@ -222,10 +222,10 @@ class PoseEst:
         # objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
 
         # Checkerboard size
-        # rows=7
-        # cols=10
-        rows=6
-        cols=9
+        rows=7
+        cols=10
+        # rows=6
+        # cols=9
         objp = np.zeros((cols*rows,3), np.float32)
         objp[:,:2] = np.mgrid[0:rows,0:cols].T.reshape(-1,2)
         objp = objp * CALIB_SQUARE_SIZE
