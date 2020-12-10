@@ -121,14 +121,14 @@ class TelloControl:
         cmd = ""
         speed = 0
        # if self.tracking:
-        if abs(Vx) > abs(Vy) or abs(Vx) > abs(Vz):
+        if abs(Vx) > abs(Vy) and abs(Vx) > abs(Vz):
             if Vx < 0:
                 cmd = "right"
                 speed = abs(Vx)
             elif Vx > 0:
                 cmd = "left"
                 speed = abs(Vx)
-        elif abs(Vy) > abs(Vx) or abs(Vy) > abs(Vz):
+        elif abs(Vy) > abs(Vx) and abs(Vy) > abs(Vz):
             if Vy < 0:
                 cmd = "up"
                 speed = abs(Vy)
