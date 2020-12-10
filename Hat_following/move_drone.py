@@ -29,8 +29,8 @@ class MoveDrone:
 
     # This command uses the output of the linear control script to give rc
     # commands to the drone without any yaw
-    def linear_control(self,Vx,Vy,Vz):
-        self.tello.send_rc_control(Vx,Vy,Vz,0)
+    def linear_control(self,roll,thrust,pitch):
+        self.tello.send_rc_control(int(roll),int(pitch),int(thrust),0)
 
     # This function calculates the x,y coordinate pairs in a circle
     # Used for arc calculations later

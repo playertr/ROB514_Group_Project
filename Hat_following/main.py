@@ -4,6 +4,7 @@ import numpy as np
 import os
 import time
 import yaml
+import keyboard
 
 from djitellopy import Tello
 
@@ -51,6 +52,15 @@ move_drone = MoveDrone(tello)
 move_drone.takeoff()
 
 while True:
+    if keyboard.is_pressed('ctrl+q'):
+        move_drone.land()
+        break
+
+    if keyboard.is_pressed('ctrl+e'):
+        move_drone.emergency()
+        break
+
+
     pose_estimator.update(tello)  # Reads a single frame from the Tello and then updates the state estimation filter.
     _, offsets = pose_estimator.get_target_state()
 
@@ -60,13 +70,15 @@ while True:
 
     offsets = offsets.flatten()
     theta = pose_estimator.get_arc_angle()[0]
+    print('Offsets: {}, Theta: {}'.format(offsets,theta))
 
     if theta_min < theta < theta_max:
         if (offsets_min < offsets).all() and (offsets < offsets_max).all():
             move_drone.linear_control(0, 0, 0)
         else:
             vx, vy, vz = move_drone.calc_linear_vel(offsets, offsets_min[1], k_constant)
-            move_drone.linear_control(vx, vy, vz)
+            print('Vx: {}, Vy: {}, Vz: {}'.format(vx,vy,vz))
+            move_drone.linear_control(vx, -vy, vz)
 
     else:
         if theta < theta_min:
