@@ -13,6 +13,8 @@ import csv
 import time
 import os
 
+LOGGING_INTERVAL = 0.1
+
 # parse args
 parser = argparse.ArgumentParser(
     description='Specify file and videocapture options.',
@@ -58,6 +60,7 @@ while os.path.exists("log%s.csv" % i):
     i += 1
 with open("log%s.csv" % i, "w") as csvfile:
     writer = csv.writer(csvfile)
+    old_time = time.time()
 
     while True:
         pose_estimator.update(tello)  # Reads a single frame from the Tello and then updates the state estimation filter.
@@ -83,5 +86,6 @@ with open("log%s.csv" % i, "w") as csvfile:
             elif theta > theta_max:
                 move_drone.arc_cw()
 
-
-        writer.writerow([time.time(), offsets, vx, vy, vz])
+        if time.time() - old_time > LOGGING_INTERVAL:
+            writer.writerow([time.time(), offsets, vx, vy, vz])
+            old_time = time.time()
