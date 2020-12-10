@@ -9,7 +9,9 @@ from djitellopy import Tello
 
 from estimate_tag import PoseEst
 from move_drone import MoveDrone
-
+import csv
+import time
+import os
 
 # parse args
 parser = argparse.ArgumentParser(
@@ -50,26 +52,36 @@ move_drone = MoveDrone(tello)
 
 move_drone.takeoff()
 
-while True:
-    pose_estimator.update(tello)  # Reads a single frame from the Tello and then updates the state estimation filter.
-    _, offsets = pose_estimator.get_target_state()
+# Create new log file 
+i=0
+while os.path.exists("log%s.csv" % i):
+    i += 1
+with open("log%s.csv" % i, "w") as csvfile:
+    writer = csv.writer(csvfile)
 
-    if offsets is None:
-        move_drone.linear_control(0, 0, 0)
-        continue
+    while True:
+        pose_estimator.update(tello)  # Reads a single frame from the Tello and then updates the state estimation filter.
+        _, offsets = pose_estimator.get_target_state()
 
-    offsets = offsets.flatten()
-    theta = pose_estimator.get_arc_angle()[0]
-
-    if theta_min < theta < theta_max:
-        if (offsets_min < offsets).all() and (offsets < offsets_max).all():
+        if offsets is None:
             move_drone.linear_control(0, 0, 0)
-        else:
-            vx, vy, vz = move_drone.calc_linear_vel(offsets, offsets_min[1], k_constant)
-            move_drone.linear_control(vx, vy, vz)
+            continue
 
-    else:
-        if theta < theta_min:
-            move_drone.arc_ccw()
-        elif theta > theta_max:
-            move_drone.arc_cw()
+        offsets = offsets.flatten()
+        theta = pose_estimator.get_arc_angle()[0]
+
+        if theta_min < theta < theta_max:
+            if (offsets_min < offsets).all() and (offsets < offsets_max).all():
+                move_drone.linear_control(0, 0, 0)
+            else:
+                vx, vy, vz = move_drone.calc_linear_vel(offsets, offsets_min[1], k_constant)
+                move_drone.linear_control(vx, vy, vz)
+
+        else:
+            if theta < theta_min:
+                move_drone.arc_ccw()
+            elif theta > theta_max:
+                move_drone.arc_cw()
+
+
+        writer.writerow([time.time(), offsets, vx, vy, vz])
