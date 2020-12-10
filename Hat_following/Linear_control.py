@@ -14,13 +14,30 @@ import cv2
 import datetime
 import numpy as np
 
+K_P = 0.1
+# K_I = 0.001
+# K_D = 0.01  
+
+K_I = 0
+K_D = 0
+
+
  #Python library that allows you to create multiple threads to run multiple functions at the same time. 
 
 def main():
     """ Create a tello controller and show the video feed."""
+
+    pe = PoseEst()
     tellotrack = TelloControl()
+
     while True:
-        tellotrack.tello_track()
+        pe.update()                         # update pose
+        rvec, tvec = pe.get_target_state()  # get rvec and tvec. If no target is seen, these are None.
+        pe.draw_estimate()                  # draw stuff
+        tellotrack.tello_track(rvec, tvec)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
 
 class TelloControl:
@@ -29,7 +46,6 @@ class TelloControl:
     is in the center of the frame
     """
     def __init__(self):
-        self.pose = PoseEst()
         self.init_PID()
 
     def init_PID(self):
@@ -55,17 +71,17 @@ class TelloControl:
                 delta_t = current_time - prev_time
 
                 #Control Equations, constants are adjusted as needed
-                Px = 0.1*xoff
-                Py = 0.1*yoff
-                Pz = 0.1*zoff
+                Px = K_P*xoff
+                Py = K_P*yoff
+                Pz = K_P*zoff
 
-                Ix = Ix + -0.001*xoff*delta_t
-                Iy = Iy + -0.001*yoff*delta_t
-                Iz = Iz + -0.001*zoff*delta_t
+                Ix = Ix + -K_I*xoff*delta_t
+                Iy = Iy + -K_I*yoff*delta_t
+                Iz = Iz + -K_I*zoff*delta_t
 
-                Dx = 0.01*(xoff - xoff_prev)/(delta_t)
-                Dy = 0.01*(yoff - yoff_prev)/(delta_t)
-                Dz = 0.01*(zoff - zoff_prev)/(delta_t)
+                Dx = K_D*(xoff - xoff_prev)/(delta_t)
+                Dy = K_D*(yoff - yoff_prev)/(delta_t)
+                Dz = K_D*(zoff - zoff_prev)/(delta_t)
 
                 Vx = Px + Ix + Dx
                 Vy = Py + Iy + Dy
@@ -80,15 +96,13 @@ class TelloControl:
         self.PID = proportional()
         self.PID.send(None)
 
-    def tello_track(self):
+    def tello_track(self, rvec, tvec):
         """convert frame to cv2 image and show"""
-        self.pose.update()
-        self.pose.draw_estimate()
-        _, tvec = self.pose.read_image_pose()  # input translational vector here
-        if tvec != None:
-            xoff, yoff, zoff = [0.001, 0.001, 0.001]
+        
+        if tvec is None:
+            xoff, yoff, zoff = [0, 0, 0] #[0.001, 0.001, 0.001]
         else:
-            xoff, yoff, zoff = [elem for elem in tvec]
+            xoff, yoff, zoff = [elem for elem in tvec.flatten()]
 
         Vx,Vy, Vz = self.PID.send([xoff, yoff, zoff])
 
@@ -97,14 +111,14 @@ class TelloControl:
         cmd = ""
         speed = 0
        # if self.tracking:
-        if abs(Vx) > abs(Vy) or abs(Vz):
+        if abs(Vx) > abs(Vy) or abs(Vx) > abs(Vz):
             if Vx < 0:
                 cmd = "right"
                 speed = abs(Vx)
             elif Vx > 0:
                 cmd = "left"
                 speed = abs(Vx)
-        elif abs(Vy) > abs(Vx) or abs(Vz):
+        elif abs(Vy) > abs(Vx) or abs(Vy) > abs(Vz):
             if Vy < 0:
                 cmd = "up"
                 speed = abs(Vy)
