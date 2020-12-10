@@ -32,6 +32,9 @@ CALIB_SQUARE_SIZE = 0.025 # meters
 X_OFFSET = 0
 Y_OFFSET = 0
 
+OPTICAL_CENTER_X = 640/2 # DEBUG
+OPTICAL_CENTER_Y = 480/2
+
 class SimpleFilter:
     """ Filter which simply returns the last known value.
     In the future, this could be changed to a legit Kalman filter
@@ -73,11 +76,12 @@ class PoseEst:
         ret, mtx, dist, rvecs, tvecs = self.get_calibration()
         self.mtx  = mtx
         self.dist = dist
+        self.mtx[0,2] = OPTICAL_CENTER_X
+        self.mtx[1,2] = OPTICAL_CENTER_Y
 
         # Start the drone stream
         if not USE_WEBCAM:
             self.drone = Record()
-            # TODO: import Record
         else:
             print("Making a VideoCapture object.")
             self.cap = cv2.VideoCapture(0)
@@ -86,9 +90,9 @@ class PoseEst:
         self.rvecs_filter = SimpleFilter()
         self.tvecs_filter = SimpleFilter()   
  
-    def update(self):
+    def update(self, tello=None):
         """ Updates the state estimate using new image. """
-        rvecs, tvecs = self.read_image_pose()     # Get new pose estimate from an image
+        rvecs, tvecs = self.read_image_pose(tello)     # Get new pose estimate from an image
         self.rvecs_filter.update_filter(rvecs)    # Update rvecs filter
         self.tvecs_filter.update_filter(tvecs)    # Update tvecs filter
 
@@ -100,18 +104,25 @@ class PoseEst:
         tvecs = self.tvecs_filter.get_current_val()
         
         if tvecs is not None:
-            tvecs[0][0][0] = tvecs[0][0][0] + X_OFFSET
-            tvecs[0][0][1] = tvecs[0][0][1] + Y_OFFSET
+            # breakpoint()
+            tvecs[0][0][0] = tvecs[0][0][0] - X_OFFSET
+            tvecs[0][0][1] = tvecs[0][0][1] - Y_OFFSET
 
         return rvecs, tvecs
 
-    def read_image_pose(self):
+    def read_image_pose(self, tello):
         """ Query the drone for a single image and estimate the pose rvecs and tvecs. """
 
         if USE_WEBCAM:
             ret, frame = self.cap.read()
         else:
-            frame = self.drone.video_stream()
+            # Read the current frame from the Tello
+            read_frame = tello.get_frame_read()
+            cur_frame = read_frame.frame
+            # Obtain the height and width of the frame
+            height, width, _ = read_frame.frame.shape
+            # Resize the frame within OpenCV
+            frame = cv2.resize(cur_frame,(width,height))
     
         # operations on the frame
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -164,6 +175,7 @@ class PoseEst:
             # code to show 'No Ids' when no markers are found
             cv2.putText(frame, "No Ids", (0,64), font, FONTSCALE, (0,255,0),2,cv2.LINE_AA)
 
+        import pdb; pdb.set_trace()
         # display the resulting frame
         cv2.imshow('frame',frame)
         cv2.waitKey(1)
@@ -187,7 +199,6 @@ class PoseEst:
         return tuple(angles)
 
     def get_distance(self):
-        # TODO: calibrate to ensure distance is in meters
         rvecs, tvecs = self.get_target_state()
         if rvecs is None:
             return None
