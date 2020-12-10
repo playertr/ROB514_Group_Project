@@ -272,9 +272,11 @@ class PoseEst:
 # Run as a script if this file is called.
 if __name__ == "__main__":
     pe = PoseEst()
+    from djitellopy import Tello
+    tello = Tello()
 
     while(True):
-        pe.update() # grabs an image and updates the filter
+        pe.update(tello) # grabs an image and updates the filter
         pe.draw_estimate() # uses the same image from earlier 
         print(f"pe.get_arc_angle: {pe.get_arc_angle()}")
         print(f"pe.get_distance: {pe.get_distance()}")
