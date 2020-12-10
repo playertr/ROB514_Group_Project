@@ -50,6 +50,7 @@ move_drone = MoveDrone(tello)
 
 while True:
     theta = pose_estimator.get_arc_angle()[0]
+    pose_estimator.update()
     _, offsets = pose_estimator.get_target_state()
 
     if theta_min < theta < theta_max:
