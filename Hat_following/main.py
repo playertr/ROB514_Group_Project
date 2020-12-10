@@ -44,14 +44,20 @@ tello.streamoff()
 time.sleep(0.1)
 tello.streamon()
 
-
 pose_estimator = PoseEst()
 move_drone = MoveDrone(tello)
 
+move_drone.takeoff()
+
 while True:
     pose_estimator.update(tello)  # Reads a single frame from the Tello and then updates the state estimation filter.
-    theta = pose_estimator.get_arc_angle()[0]
     _, offsets = pose_estimator.get_target_state()
+
+    if offsets is None:
+        move_drone.linear_control(0, 0, 0)
+        continue
+
+    theta = pose_estimator.get_arc_angle()[0]
 
     if theta_min < theta < theta_max:
         if offsets_min < offsets < offsets_max:
