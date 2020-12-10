@@ -88,3 +88,19 @@ class MoveDrone:
 
     def stop(self):
         self.tello.send_rc_control(0,0,0,0)
+
+    def calc_linear_vel(self, tvec, zoff_thresh, k):
+        """convert frame to cv2 image and show"""
+        if tvec is None:
+            xoff, yoff, zoff = [0, 0, 0]  # [0.001, 0.001, 0.001]
+        else:
+            xoff, yoff, zoff = [elem for elem in tvec.flatten()]
+
+        zoff = zoff - zoff_thresh  # distance to maintain from the target
+
+        # Control Equations, constants are adjusted as needed
+        Vx = k[0] * xoff
+        Vy = k[1] * yoff
+        Vz = k[2] * zoff
+
+        return Vx, Vy, Vz

@@ -1,10 +1,9 @@
 import argparse
 import errno
-import numpy as npgit
+import numpy as np
 import os
 import time
 import yaml
-from threading import Thread
 
 from djitellopy import Tello
 
@@ -35,6 +34,7 @@ theta_min = config["follow_tag"]["theta_min"] * np.pi / 180
 theta_max = config["follow_tag"]["theta_max"] * np.pi / 180
 offsets_min = config["follow_tag"]["offsets_min"]
 offsets_max = config["follow_tag"]["offsets_max"]
+k_constant = config["follow_tag"]["k_constant"]
 
 
 # initialize Tello
@@ -45,11 +45,11 @@ time.sleep(0.1)
 tello.streamon()
 
 
-pose_estimator = PoseEst(tello)
+pose_estimator = PoseEst()
 move_drone = MoveDrone(tello)
 
 while True:
-    pose_estimator.update(tello)                    # Reads a single frame from the Tello and then updates the state estimation filter.
+    pose_estimator.update(tello)  # Reads a single frame from the Tello and then updates the state estimation filter.
     theta = pose_estimator.get_arc_angle()[0]
     _, offsets = pose_estimator.get_target_state()
 
@@ -57,13 +57,11 @@ while True:
         if offsets_min < offsets < offsets_max:
             move_drone.linear_control(0, 0, 0)
         else:
-            cmd, speed = linear_controller.tello_track(rvec, tvec)
-
-            pass
-            # vx, vy, vz = calculate_xyz_error()
-            # go x y z speed
+            vx, vy, vz = move_drone.calc_linear_vel(offsets, offsets_min[1], k_constant)
+            move_drone.linear_control(vx, vy, vz)
 
     else:
-        pass
-        # a, b, c, d = calculate_arc()
-        # set rc a b c d
+        if theta < theta_min:
+            move_drone.arc_ccw()
+        elif theta > theta_max:
+            move_drone.arc_cw()
