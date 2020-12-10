@@ -2,5 +2,5 @@ follow_tag:
   theta_min: -40
   theta_max: 40
   offsets_min: [-0.1, -0.1, 1.0]
-  offsets_max: [0.1, 0.1, 10.0]
+  offsets_max: [0.1, 0.1, 1.5]
   k_constant: [60.0, 60.0, 10.0]
