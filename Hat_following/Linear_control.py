@@ -24,6 +24,19 @@ K_D = 0
 
  #Python library that allows you to create multiple threads to run multiple functions at the same time. 
 
+def main_with_tello():
+    """ Create a tello controller and show the video feed."""
+    from djitellopy import Tello
+    tello = Tello()
+    pe = PoseEst()
+    tellotrack = TelloControl()
+
+    while True:
+        pe.update(tello)                         # update pose
+        rvec, tvec = pe.get_target_state()  # get rvec and tvec. If no target is seen, these are None.
+        pe.draw_estimate()                  # draw stuff
+        tellotrack.tello_track(rvec, tvec)
+
 def main():
     """ Create a tello controller and show the video feed."""
 
@@ -134,4 +147,5 @@ class TelloControl:
         return cmd, speed
 
 if __name__ == '__main__':
-    main()
+    # main()
+    main_with_tello()
