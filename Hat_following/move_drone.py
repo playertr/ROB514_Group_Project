@@ -33,8 +33,6 @@ class MoveDrone:
     # commands to the drone without any yaw
     def linear_control(self,Vx,Vy,Vz):
         self.tello.send_rc_control(Vx,Vy,Vz,0)
-        time.sleep(0.1)
-        self.tello.stop()
 
     # This function calculates the x,y coordinate pairs in a circle
     # Used for arc calculations later
@@ -83,3 +81,12 @@ class MoveDrone:
             self.tello.send_rc_control(x,y,0,10)
             time.sleep(time_step)
         self.tello.stop()
+
+    def arc_cw(self):
+        self.tello.send_rc_control(-40,0,0,40)
+
+    def arc_ccw(self):
+        self.tello.send_rc_control(40,0,0,-40)
+
+    def stop(self):
+        self.tello.send_rc_control(0,0,0,0)
