@@ -91,21 +91,32 @@ class MoveDrone:
         self.tello.send_rc_control(0, 0, 0, 0)
 
     @staticmethod
-    def calc_linear_vel(self, tvec, tvec_min, tvec_max, k):
+    def calc_linear_vel(tvec, tvec_min, tvec_max, k):
 
         vx, vy, vz = (0, 0, 0)
         xoff, yoff, zoff = [elem for elem in tvec]
 
         # Control Equations, constants are adjusted as needed
-        if not (tvec_min[0] < xoff < tvec_max[0]):
-            vx = k[0] * xoff
+        # if not (tvec_min[0] < xoff < tvec_max[0]):
+            # vx = k[0] * xoff
 
-        if not (tvec_min[1] < yoff < tvec_max[1]):
-            vy = k[1] * yoff
+        # if not (tvec_min[1] < yoff < tvec_max[1]):
+            # vy = k[1] * yoff
+        if xoff < tvec_min[0]:
+            vx = -20
+        elif xoff > tvec_max[0]:
+            vx = 20
+
+        if yoff < tvec_min[1]:
+            vx = -20
+        elif yoff > tvec_max[1]:
+            vx = 20
 
         if zoff < tvec_min[2]:
-            vz = k[2] * -zoff
+            # vz = k[2] * -zoff
+            vz = -20
         elif zoff > tvec_max[2]:
-            vz = k[2] * zoff
+            # vz = k[2] * zoff
+            vz = 20
 
         return vx, vy, vz

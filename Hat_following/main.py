@@ -53,13 +53,13 @@ move_drone = MoveDrone(tello)
 move_drone.takeoff()
 
 
-# Create new log file 
-i=0
-while os.path.exists("log%s.csv" % i):
-    i += 1
-with open("log%s.csv" % i, "w") as csvfile:
-    writer = csv.writer(csvfile)
-    old_time = time.time()
+# Create new log file
+# i=0
+# while os.path.exists("log%s.csv" % i):
+#     i += 1
+# with open("log%s.csv" % i, "w") as csvfile:
+#     writer = csv.writer(csvfile)
+#     old_time = time.time()
 
 
 while True:
@@ -92,10 +92,10 @@ while True:
             move_drone.linear_control(vx, -vy, vz)
     else:
         if theta < theta_min:
-            move_drone.arc_ccw()
-        elif theta > theta_max:
             move_drone.arc_cw()
+        elif theta > theta_max:
+            move_drone.arc_ccw()
 
-    if time.time() - old_time > LOGGING_INTERVAL:
-        writer.writerow([time.time(), offsets, vx, vy, vz])
-        old_time = time.time()
+    # if time.time() - old_time > LOGGING_INTERVAL:
+    #     writer.writerow([time.time(), offsets, vx, vy, vz])
+    #     old_time = time.time()
