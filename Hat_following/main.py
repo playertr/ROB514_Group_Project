@@ -32,9 +32,10 @@ except IOError:
 
 theta_min = config["follow_tag"]["theta_min"] * np.pi / 180
 theta_max = config["follow_tag"]["theta_max"] * np.pi / 180
-offsets_min = config["follow_tag"]["offsets_min"]
-offsets_max = config["follow_tag"]["offsets_max"]
+offsets_min = np.array(config["follow_tag"]["offsets_min"])
+offsets_max = np.array(config["follow_tag"]["offsets_max"])
 k_constant = config["follow_tag"]["k_constant"]
+
 
 
 # initialize Tello
@@ -57,10 +58,11 @@ while True:
         move_drone.linear_control(0, 0, 0)
         continue
 
+    offsets = offsets.flatten()
     theta = pose_estimator.get_arc_angle()[0]
 
     if theta_min < theta < theta_max:
-        if offsets_min < offsets < offsets_max:
+        if (offsets_min < offsets).all() and (offsets < offsets_max).all():
             move_drone.linear_control(0, 0, 0)
         else:
             vx, vy, vz = move_drone.calc_linear_vel(offsets, offsets_min[1], k_constant)
